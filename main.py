@@ -16,6 +16,7 @@ class MPlayer:
 
         self.img_add = PhotoImage(file="assets/add.png")
         self.img_remove = PhotoImage(file="assets/remove.png")
+        self.img_clear = PhotoImage(file="assets/clear.png")
         self.img_play = PhotoImage(file="assets/play.png")
         self.img_next = PhotoImage(file="assets/next.png")
         self.img_previous = PhotoImage(file="assets/previous.png")
@@ -35,6 +36,9 @@ class MPlayer:
 
         self.add = ttk.Button(self.frame, image=self.img_add, command=self.import_music_folder)
         self.add.grid(row=0, column=1, padx=10)
+
+        self.clear = ttk.Button(self.frame, image=self.img_clear, command=self.delete_music_list)
+        self.clear.grid(row=0, column=3, padx=10)
 
         self.frame2 = ttk.Frame(self.window)
         self.frame2.pack(pady=10)
@@ -84,18 +88,27 @@ class MPlayer:
             self.list.activate(0)
             self.list.select_set(0)
         except TypeError:
-            self.send_message("ERROR", "Invalid folder provided.")
+            self.send_message("ERROR", "Invalid folder provided.", "Oh Chesus!")
 
-    @staticmethod
-    def send_message(message_type, message_text):
+    def delete_music_list(self):
+        self.list.delete(0, END)
+
+    def send_message(self, message_type, message_text, message_button):
         window = Toplevel()
         window.title(message_type)
+        window_width = 300
+        window_height = 200
+        screen_width = self.window.winfo_screenwidth()
+        screen_height = self.window.winfo_screenheight()
         window.resizable(FALSE, FALSE)
-        window.geometry("300x200+300+200")
+        window.geometry(self.number_to_string(window_width) + "x" +
+                        self.number_to_string(window_height) + "+" +
+                        self.number_to_string((screen_width - window_width) / 2) + "+" +
+                        self.number_to_string((screen_height - window_height) / 2))
 
-        Label(window, text=message_text, pady=30, font="Comic 12").pack()
+        Label(window, text=message_text, pady=30, font="Comic 12").pack(expand=YES)
 
-        Button(window, text="OK", command=window.destroy)
+        Button(window, text=message_button, command=window.destroy).pack(pady=30)
 
     def remove_music_file(self):
         self.list.delete(ACTIVE)
@@ -107,30 +120,34 @@ class MPlayer:
         self.navigate_list(False)
 
     def navigate_list(self, forward):
-        current = self.list.curselection()[0]
-        if forward:
-            if self.list.size() <= current + 1:
-                current = 0
+        try:
+            current = self.list.curselection()[0]
+            if forward:
+                if self.list.size() <= current + 1:
+                    current = 0
+                else:
+                    current += 1
             else:
-                current += 1
-        else:
-            if 0 > current - 1:
-                current = self.list.size() - 1
-            else:
-                current -= 1
-        self.list.select_clear(0, END)
-        self.list.activate(current)
-        self.list.select_set(current)
-        self.list.yview(current)
-        self.play_selected_music()
+                if 0 > current - 1:
+                    current = self.list.size() - 1
+                else:
+                    current -= 1
+            self.list.select_clear(0, END)
+            self.list.activate(current)
+            self.list.select_set(current)
+            self.list.yview(current)
+            self.play_selected_music()
+        except IndexError:
+            self.send_message("ERROR", "Please add some music first.", "OOOOPS!")
 
     def play_selected_music(self):
+        file_path = ""
         try:
             file_path = str(self.folder) + "/" + str(self.list.get(ACTIVE))
             mixer.music.load(file_path)
             mixer.music.play()
         except error:
-            self.send_message("ERROR", "Could not play file:\r\n" + file_path)
+            self.send_message("ERROR", "Could not play file:\r\n" + file_path, "OKAY...")
 
 
 MPlayer()
