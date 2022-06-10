@@ -162,18 +162,19 @@ class MPlayer:
         try:
             if self.status == PlayStatus.STOPPED:
                 file_path = str(self.folder) + "/" + str(self.list.get(ACTIVE))
+                # print("Playing: " + file_path)
                 mixer.music.load(file_path)
                 mixer.music.play()
                 self.status = PlayStatus.PLAYING
-                self.play.config(image=self.img_play)
+                self.play.config(image=self.img_pause)
             elif self.status == PlayStatus.PLAYING:
                 mixer.music.pause()
                 self.status = PlayStatus.PAUSED
-                self.play.config(image=self.img_pause)
+                self.play.config(image=self.img_play)
             elif self.status == PlayStatus.PAUSED:
                 mixer.music.unpause()
                 self.status = PlayStatus.PLAYING
-                self.play.config(image=self.img_play)
+                self.play.config(image=self.img_pause)
         except error:
             self.send_message("ERROR", "Could not play file:\r\n" + file_path, "OKAY...")
 
