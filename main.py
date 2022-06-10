@@ -3,6 +3,13 @@ from tkinter import ttk, filedialog
 from ttkthemes import ThemedTk
 from pygame import mixer, error
 import os
+from enum import Enum, auto
+
+
+class PlayStatus(Enum):
+    STOPPED = auto(),
+    PLAYING = auto(),
+    PAUSED = auto
 
 
 class MPlayer:
@@ -22,6 +29,8 @@ class MPlayer:
         self.img_previous = PhotoImage(file="assets/previous.png")
         self.img_pause = PhotoImage(file="assets/pause.png")
 
+        self.status = PlayStatus.STOPPED
+
         self.folder = ""
 
         self.list = Listbox(self.window, bg="#555555", height=16, fg="gray", font="Comic 12",
@@ -38,7 +47,7 @@ class MPlayer:
         self.add.grid(row=0, column=1, padx=10)
 
         self.clear = ttk.Button(self.frame, image=self.img_clear, command=self.delete_music_list)
-        self.clear.grid(row=0, column=3, padx=10)
+        self.clear.grid(row=0, column=3)
 
         self.frame2 = ttk.Frame(self.window)
         self.frame2.pack(pady=10)
@@ -111,7 +120,14 @@ class MPlayer:
         Button(window, text=message_button, command=window.destroy).pack(pady=30)
 
     def remove_music_file(self):
+        current = self.list.curselection()[0]
         self.list.delete(ACTIVE)
+        if self.list.size() > 0:
+            if current >= self.list.size():
+                current = 0
+            self.list.select_clear(0, END)
+            self.list.activate(current)
+            self.list.select_set(current)
 
     def play_next_music(self):
         self.navigate_list(True)
@@ -136,6 +152,7 @@ class MPlayer:
             self.list.activate(current)
             self.list.select_set(current)
             self.list.yview(current)
+            self.status = PlayStatus.STOPPED
             self.play_selected_music()
         except IndexError:
             self.send_message("ERROR", "Please add some music first.", "OOOOPS!")
@@ -143,9 +160,20 @@ class MPlayer:
     def play_selected_music(self):
         file_path = ""
         try:
-            file_path = str(self.folder) + "/" + str(self.list.get(ACTIVE))
-            mixer.music.load(file_path)
-            mixer.music.play()
+            if self.status == PlayStatus.STOPPED:
+                file_path = str(self.folder) + "/" + str(self.list.get(ACTIVE))
+                mixer.music.load(file_path)
+                mixer.music.play()
+                self.status = PlayStatus.PLAYING
+                self.play.config(image=self.img_play)
+            elif self.status == PlayStatus.PLAYING:
+                mixer.music.pause()
+                self.status = PlayStatus.PAUSED
+                self.play.config(image=self.img_pause)
+            elif self.status == PlayStatus.PAUSED:
+                mixer.music.unpause()
+                self.status = PlayStatus.PLAYING
+                self.play.config(image=self.img_play)
         except error:
             self.send_message("ERROR", "Could not play file:\r\n" + file_path, "OKAY...")
 
