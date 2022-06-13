@@ -61,8 +61,9 @@ class MPlayer:
         self.next = ttk.Button(self.frame2, image=self.img_next, command=self.play_next_music)
         self.next.grid(row=0, column=2)
 
-        self.volume = ttk.Scale(self.window)
+        self.volume = ttk.Scale(self.window, from_=0, to=1, command=self.set_volume)
         self.volume.pack(fill=X, pady=10, padx=10)
+        self.volume.set(0.5)
 
         self.window.mainloop()
 
@@ -177,6 +178,9 @@ class MPlayer:
                 self.play.config(image=self.img_pause)
         except error:
             self.send_message("ERROR", "Could not play file:\r\n" + file_path, "OKAY...")
+
+    def set_volume(self, var):
+        mixer.music.set_volume(self.volume.get())
 
 
 MPlayer()
