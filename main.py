@@ -184,3 +184,5 @@ class MPlayer:
 
 
 MPlayer()
+
+# pyinstaller main.py --onefile -n "Music Player" --noconsole --hidden-import='pygame' --hidden-import='ttkthemes'
